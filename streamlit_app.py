@@ -112,6 +112,40 @@ def cfg():
 
 
 # ------------------------------------------------------------------------------------------------------ sign in --
+SSO_PREFIX = "sso$google$"  # stored instead of a password hash: such an account can only sign in with Google
+
+
+def sso_configured():
+    """Google sign-in shows once the app's secrets have an [auth] section with a [auth.google] provider."""
+    try:
+        return "auth" in st.secrets and "google" in st.secrets["auth"]
+    except Exception:
+        return False
+
+
+def sso_user():
+    """The Invoice Flow account for whoever signed in with Google, created on their first visit. None if not signed in."""
+    if not sso_configured() or not getattr(st.user, "is_logged_in", False):
+        return None
+    email = str(st.user.get("email") or "").strip().lower()
+    if not email or st.user.get("email_verified") is False:
+        st.error("Your Google account didn't share a verified email address, so it can't be used here.")
+        return None
+    if not auth.USERNAME_RE.fullmatch(email):
+        st.error("This email address can't be used as an Invoice Flow account name. Create an account with a username instead.")
+        return None
+    user = db.find_user(email)
+    if user is None:
+        uid = db.create_user(email, SSO_PREFIX + os.urandom(16).hex())
+        user = db.find_user(email) if uid is None else dict(id=uid, username=email, pw_hash=SSO_PREFIX)
+    if not user["pw_hash"].startswith(SSO_PREFIX):
+        # a password account already uses this name: never hand it to a Google login, or anyone could pre-register a
+        # victim's email as a username and read whatever that person later uploads
+        st.error(f"An account called {email} already exists with a password. Log in with its password instead.")
+        return None
+    return dict(id=user["id"], username=user["username"], sso=True)
+
+
 def sign_in_page():
     _, mid, _ = st.columns([1, 1.3, 1])
     with mid:
@@ -119,6 +153,13 @@ def sign_in_page():
         st.write("Upload an invoice. It's read, checked against your purchase orders and approved vendors, and you get "
                  "**Approve, Hold or Reject** with the reasons.")
         provider = extract.llm_provider()[0]
+        if sso_configured():
+            if getattr(st.user, "is_logged_in", False):  # signed in with Google but refused above: offer a way out
+                if st.button("Sign out of Google", use_container_width=True):
+                    st.logout()
+            elif st.button("Continue with Google", type="primary", use_container_width=True, icon=":material/login:"):
+                st.login("google")
+            st.markdown("<p class='muted' style='text-align:center'>or use a username and password</p>", unsafe_allow_html=True)
         tab_in, tab_up = st.tabs(["Log in", "Create account"])
         with tab_in, st.form("login"):
             name = st.text_input("Username")
@@ -129,6 +170,9 @@ def sign_in_page():
                     st.error("Too many failed attempts. Try again in 15 minutes.")
                 else:
                     user = db.find_user(name.strip())
+                    if user and user["pw_hash"].startswith(SSO_PREFIX):
+                        st.error("This account signs in with Google. Use Continue with Google.")
+                        st.stop()
                     if user and auth.verify_password(pw[:200], user["pw_hash"]):
                         st.session_state.user = dict(id=user["id"], username=user["username"])
                         st.rerun()
@@ -160,8 +204,12 @@ def sign_in_page():
 
 
 if "user" not in st.session_state:
-    sign_in_page()
-    st.stop()
+    _sso = sso_user()
+    if _sso:
+        st.session_state.user = _sso
+    else:
+        sign_in_page()
+        st.stop()
 
 USER = st.session_state.user
 CFG = cfg()
@@ -213,8 +261,11 @@ with st.sidebar:
     c1, c2 = st.columns([4, 1])
     c1.markdown(f"**{USER['username']}**")
     if c2.button("⎋", help="Log out"):
+        signed_in_with_google = USER.get("sso")
         for k in list(ss.keys()):
             del ss[k]
+        if signed_in_with_google:
+            st.logout()  # also ends the Google sign-in, or the next page load would sign straight back in
         st.rerun()
 
 

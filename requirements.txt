@@ -15,4 +15,5 @@ rapidocr==3.10.0                  # OCR, with the PP-OCRv6 models bundled, so it
 onnxruntime==1.31.1
 opencv-python-headless==5.0.0.93  # image handling for the OCR; the headless build needs no display libraries
 anthropic==2.4.0                  # only used if ANTHROPIC_API_KEY is set
-streamlit>=1.40                   # the Streamlit front end (streamlit_app.py)
+streamlit>=1.42                   # the Streamlit front end (streamlit_app.py)
+Authlib>=1.3.2                    # Google sign-in (st.login), used when [auth] is set in the app's secrets
