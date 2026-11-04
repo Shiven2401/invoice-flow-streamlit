@@ -1,0 +1,18 @@
+# Exact versions, tested together on Python 3.12 (the Docker image's version). Pinned so a new release can't break a
+# deploy: a fresh install of PyMuPDF 2.1 has failed to import here ("No module named 'mupdf'"); 2.0 works.
+fastapi==0.162.0
+uvicorn==0.54.0
+python-multipart==0.0.33
+pdfplumber==0.11.10
+pymupdf==2.0
+pillow==13.0.0
+numpy==2.5.4
+loguru==0.7.3
+python-dotenv==1.2.4
+xlsxwriter==3.3.1
+requests==2.34.2
+rapidocr==3.10.0                  # OCR, with the PP-OCRv6 models bundled, so it works offline
+onnxruntime==1.31.1
+opencv-python-headless==5.0.0.93  # image handling for the OCR; the headless build needs no display libraries
+anthropic==2.4.0                  # only used if ANTHROPIC_API_KEY is set
+streamlit>=1.40                   # the Streamlit front end (streamlit_app.py)

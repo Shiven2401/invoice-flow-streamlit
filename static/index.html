@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Invoice Flow</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="/static/app.css">
+<script src="/static/theme.js"></script>
+</head>
+<body class="signed-out">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <!-- roughens the edge of the decision stamp so it reads as ink, not vector -->
+  <filter id="rough" x="-5%" y="-5%" width="110%" height="110%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="4" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="2.2"/>
+  </filter>
+</svg>
+
+<header class="sidebar">
+  <a class="brand" href="#process" aria-label="Invoice Flow home">
+    <span class="brand-mark" aria-hidden="true">✓</span>
+    <span class="brand-name">Invoice Flow</span>
+  </a>
+  <div class="side-folders">
+    <p class="side-label">Folders</p>
+    <button class="folder new-folder" id="new-folder" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h3.6l2 2.5h7.4A1.5 1.5 0 0 1 20 8v10a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18z"/><path d="M12 10.5v5.5M9.25 13.25h5.5"/></svg>
+      <span class="fname">New folder</span>
+    </button>
+    <ul class="folders" id="folders"></ul>
+  </div>
+  <div class="side-foot">
+    <div class="theme-switch" role="radiogroup" aria-label="Theme">
+      <button type="button" role="radio" data-theme-pick="light" aria-checked="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/></svg>
+        <span>Light</span></button>
+      <button type="button" role="radio" data-theme-pick="dark" aria-checked="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+        <span>Dark</span></button>
+    </div>
+    <div class="engine" id="engine" title="How documents are read"></div>
+    <div class="who" id="who" hidden>
+      <span class="avatar" id="who-avatar" aria-hidden="true"></span><span id="who-name"></span>
+      <button class="logout" id="logout" type="button" aria-label="Log out" title="Log out">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h4.5A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5H14"/><path d="M10 8l-4 4 4 4M6 12h10"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- the workspace sections, as a bar along the bottom of the page -->
+<nav class="tabs dock" aria-label="Sections">
+  <a href="#process" data-tab="process">Process</a>
+  <a href="#dashboard" data-tab="dashboard">Dashboard</a>
+  <a href="#ledger" data-tab="ledger">PO ledger</a>
+  <a href="#rules" data-tab="rules">Rules</a>
+</nav>
+
+<section class="auth" id="auth" hidden>
+  <h1>Sign in to Invoice Flow</h1>
+  <p class="lede">Your invoices, dashboard and approved vendors are private to your account.</p>
+  <form id="auth-form">
+    <label>Username<input type="text" name="username" autocomplete="username" required minlength="3" maxlength="64"></label>
+    <label>Password<input type="password" name="password" autocomplete="current-password" required maxlength="200"></label>
+    <p class="auth-error" id="auth-error" role="alert" hidden></p>
+    <div class="auth-actions">
+      <button class="btn primary" type="submit">Log in</button>
+      <button class="btn" type="button" id="signup">Create account</button>
+    </div>
+    <p class="hint">Passwords need at least 8 characters. There is no password reset yet, so keep yours safe.</p>
+  </form>
+</section>
+
+<main>
+  <!-- ============================ PROCESS ============================ -->
+  <section id="view-process" class="view process">
+    <input type="file" id="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.tif,.tiff,.bmp,.zip" multiple hidden>
+    <section class="run" id="run" aria-label="Document steps" aria-live="polite"></section>
+  </section>
+
+  <!-- =========================== DASHBOARD =========================== -->
+  <section id="view-dashboard" class="view page" hidden>
+    <div class="dash-head">
+      <h1 class="dash-title" id="dash-title">All invoices</h1>
+      <a class="btn primary" id="export" href="/api/export.xlsx">Download Excel report</a>
+    </div>
+    <div class="dash-tabs" role="tablist" aria-label="Dashboard views">
+      <button type="button" role="tab" id="tab-overview" data-dash-tab="overview" aria-selected="true" aria-controls="dash-overview">Overview</button>
+      <button type="button" role="tab" id="tab-analytics" data-dash-tab="analytics" aria-selected="false" aria-controls="dash-analytics">Analytics</button>
+    </div>
+    <!-- every filter in one place: folder and period scope the whole Dashboard, the rest only the History table -->
+    <div class="filter-bar" id="filter-bar" role="group" aria-label="Filters">
+      <label class="f f-folder"><span>Folder</span><select id="folder-pick"></select></label>
+      <div class="f">
+        <label for="period-kind">Dated</label>
+        <select id="period-kind">
+          <option value="all">All time</option>
+          <option value="month">Monthly</option>
+          <option value="year">Yearly</option>
+        </select>
+        <select id="period-pick" aria-label="Which month or year" hidden></select>
+      </div>
+      <div class="f history-only"><span id="outcome-label">Outcome</span>
+        <div class="chips" id="filters" role="group" aria-labelledby="outcome-label">
+          <button class="chip on" data-f="ALL">All</button>
+          <button class="chip" data-f="APPROVE">Approved</button>
+          <button class="chip" data-f="HOLD">Held</button>
+        </div>
+      </div>
+      <label class="f history-only"><span>Group by</span>
+        <select id="group-by">
+          <option value="date">Date</option>
+          <option value="month">Month</option>
+          <option value="year">Year</option>
+          <option value="vendor">Vendor</option>
+          <option value="invoice">Invoice number</option>
+          <option value="po">PO</option>
+          <option value="outcome">Outcome</option>
+          <option value="folder">Folder</option>
+          <option value="none">No grouping</option>
+        </select>
+      </label>
+      <input type="search" class="f-search history-only" id="history-search" placeholder="Find invoice, vendor, PO or file" aria-label="Find an invoice">
+    </div>
+    <div id="dash-analytics" role="tabpanel" aria-labelledby="tab-analytics" hidden></div>
+    <div id="dash-overview" role="tabpanel" aria-labelledby="tab-overview">
+      <div class="tally" id="tally"></div>
+      <div class="dash-grid">
+        <section>
+          <h2>Outcomes</h2>
+          <div id="split"></div>
+        </section>
+        <section>
+          <h2>Why invoices stop</h2>
+          <div id="reasons"></div>
+        </section>
+      </div>
+      <section id="history-section">
+        <div class="table-head"><h2>History</h2><span class="muted" id="history-count"></span></div>
+        <p class="hint" id="undated" hidden></p>
+        <div class="table-wrap"><table class="greenbar" id="history"></table></div>
+      </section>
+    </div>
+    <div class="viz-tip" id="viz-tip" role="tooltip" hidden></div>
+  </section>
+
+  <!-- ============================ LEDGER ============================ -->
+  <section id="view-ledger" class="view page" hidden>
+    <h1>Purchase order ledger</h1>
+    <p class="lede">Every approved invoice is posted against its PO. The next invoice is judged on what has been billed so far, not on its own.</p>
+    <div class="table-wrap"><table class="greenbar" id="po-table"></table></div>
+    <div class="table-head section-head">
+      <h2>Vendors</h2>
+      <a class="btn primary" id="export-vendors" href="/api/vendors.xlsx">Download approved vendors</a>
+    </div>
+    <p class="lede">The master list, plus any vendor a person approved from a held invoice. Approvals made here can be removed.</p>
+    <div class="table-wrap"><table class="greenbar" id="vendor-table"></table></div>
+  </section>
+
+  <!-- ============================= RULES ============================= -->
+  <section id="view-rules" class="view page" hidden>
+    <h1>How decisions are made</h1>
+    <div id="rules"></div>
+  </section>
+</main>
+
+<dialog class="modal" id="folder-dialog" aria-label="Folders"></dialog>
+<div class="toast" id="toast" role="status" hidden><span></span><button type="button">Undo</button></div>
+
+<aside class="drawer" id="drawer" hidden aria-label="Run detail">
+  <div class="drawer-bar"><button class="btn quiet" id="drawer-close">Close</button></div>
+  <div class="drawer-body" id="drawer-body"></div>
+</aside>
+<div class="scrim" id="scrim" hidden></div>
+<!-- a bill's picture, opened large from the detail panel -->
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="The bill, enlarged" hidden>
+  <button class="btn quiet lightbox-close" id="lightbox-close" type="button">Close</button>
+  <img id="lightbox-img" alt="">
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

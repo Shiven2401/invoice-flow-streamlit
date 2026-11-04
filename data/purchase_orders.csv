@@ -1,0 +1,11 @@
+po_number,vendor_id,po_date,description,net_amount,gst_rate,status
+PO-2026-1001,V001,2026-09-02,Office stationery and printer consumables,100000,18,open
+PO-2026-1002,V002,2026-09-04,Annual laptop maintenance contract (AMC),500000,18,open
+PO-2026-1003,V003,2026-09-05,Freight services Q4 line-haul,80000,18,open
+PO-2026-1004,V004,2026-09-08,Facility housekeeping services Oct-Nov,150000,18,open
+PO-2026-1005,V001,2026-09-05,Ergonomic chairs 20 units,200000,18,open
+PO-2026-1006,V002,2026-09-10,Network switches 24-port 4 units,120000,18,open
+PO-2026-1007,V003,2026-09-12,Warehouse racking installation,50000,18,open
+PO-2026-1008,V001,2026-09-15,Printer cartridges and drum units,75000,18,open
+PO-2026-1009,V002,2026-09-18,Wi-Fi access points 6 units,45000,18,open
+PO-2026-1010,V004,2026-09-20,Pest control annual service,36000,18,open

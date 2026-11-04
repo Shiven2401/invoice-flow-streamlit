@@ -1,0 +1,11 @@
+# secrets and local data: never commit these
+.env
+runtime/
+# environments and caches
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+# Streamlit secrets (GEMINI_API_KEY): set them in the Streamlit Cloud settings, never here
+.streamlit/secrets.toml

@@ -1,0 +1,140 @@
+[
+  {
+    "order": 1,
+    "file": "01_happy_path_clean_exact.pdf",
+    "title": "Happy path - clean PDF, explicit PO, exact match",
+    "scenario": "Machine-readable PDF, itemised, GST shown separately, PO reference printed. Everything lines up.",
+    "expected": "APPROVE",
+    "codes": []
+  },
+  {
+    "order": 2,
+    "file": "02_tax_embedded_bundled.pdf",
+    "title": "Bundled line, GST embedded in the total",
+    "scenario": "One lump-sum line, no subtotal or tax breakdown. The engine must back out 18% GST to compare against the PO's net value.",
+    "expected": "APPROVE",
+    "codes": [
+      "TAX_EMBEDDED",
+      "PARTIAL_BILLING"
+    ]
+  },
+  {
+    "order": 3,
+    "file": "03_po_implied_no_reference.pdf",
+    "title": "PO reference implied, not stated",
+    "scenario": "No PO number anywhere. The engine must infer the PO from vendor + amount + description and say how confident it is.",
+    "expected": "APPROVE",
+    "codes": [
+      "IMPLIED_PO_MATCH"
+    ]
+  },
+  {
+    "order": 4,
+    "file": "04_split_invoice_1_of_2.pdf",
+    "title": "Split PO - invoice 1 of 2 (60%)",
+    "scenario": "Vendor bills 60% of a PO. Approved as a partial; the PO ledger records the balance.",
+    "expected": "APPROVE",
+    "codes": [
+      "PARTIAL_BILLING"
+    ]
+  },
+  {
+    "order": 5,
+    "file": "05_split_invoice_2_of_2.pdf",
+    "title": "Split PO - invoice 2 of 2 (closes the PO)",
+    "scenario": "The remaining 40%. Cumulative billing now equals the PO exactly, so it is approved and the PO closes.",
+    "expected": "APPROVE",
+    "codes": [
+      "PO_FULLY_BILLED"
+    ]
+  },
+  {
+    "order": 6,
+    "file": "06_split_third_invoice_overbilled.pdf",
+    "title": "Split PO - a third invoice pushes billing past the PO",
+    "scenario": "Each invoice looks fine alone; cumulative billing is 108% of the PO. Only the cumulative ledger catches it.",
+    "expected": "HOLD",
+    "codes": [
+      "OVER_TOLERANCE"
+    ]
+  },
+  {
+    "order": 7,
+    "file": "07_near_miss_within_tolerance.pdf",
+    "title": "Near-miss amount - 1.2% over PO, inside tolerance",
+    "scenario": "Net 80,960 vs PO 80,000. Not exact, but within the 2% tolerance - approved with the variance recorded.",
+    "expected": "APPROVE",
+    "codes": [
+      "WITHIN_TOLERANCE"
+    ]
+  },
+  {
+    "order": 8,
+    "file": "08_over_tolerance_6pct.pdf",
+    "title": "Near-miss amount - 6% over PO, outside tolerance",
+    "scenario": "Net 53,000 vs PO 50,000. Close enough to look right, too far to pay without a person looking.",
+    "expected": "HOLD",
+    "codes": [
+      "OVER_TOLERANCE"
+    ]
+  },
+  {
+    "order": 9,
+    "file": "09_duplicate_resubmission.pdf",
+    "title": "Duplicate - the same invoice sent again",
+    "scenario": "Same vendor and invoice number as scenario 01, but a different file (a 'reminder' copy). Must not be paid twice.",
+    "expected": "REJECT",
+    "codes": [
+      "DUPLICATE_EXACT"
+    ]
+  },
+  {
+    "order": 10,
+    "file": "10_possible_duplicate_no_number.pdf",
+    "title": "Missing invoice number + looks like a duplicate",
+    "scenario": "No invoice number at all, but vendor, date and amount match scenario 02. Can't be proven a duplicate, can't be safely paid.",
+    "expected": "HOLD",
+    "codes": [
+      "MISSING_FIELD",
+      "POSSIBLE_DUPLICATE"
+    ]
+  },
+  {
+    "order": 11,
+    "file": "11_unapproved_vendor.pdf",
+    "title": "Vendor not on the approved list",
+    "scenario": "Valid-looking invoice from a supplier procurement has never onboarded. Held and routed to vendor onboarding.",
+    "expected": "HOLD",
+    "codes": [
+      "VENDOR_UNKNOWN"
+    ]
+  },
+  {
+    "order": 12,
+    "file": "12_scanned_image_clean.pdf",
+    "title": "Scanned image - no text layer, all fields present",
+    "scenario": "Image-only PDF with skew and noise. Needs OCR / vision to read. Once read, it is a clean match.",
+    "expected": "APPROVE",
+    "codes": []
+  },
+  {
+    "order": 13,
+    "file": "13_scanned_missing_date.pdf",
+    "title": "Scanned image - invoice date missing",
+    "scenario": "Scan with no invoice date. The engine must not guess: it holds and drafts a query to the vendor.",
+    "expected": "HOLD",
+    "codes": [
+      "MISSING_FIELD"
+    ]
+  },
+  {
+    "order": 14,
+    "file": "14_arithmetic_mismatch.pdf",
+    "title": "Lines don't add up to the stated subtotal",
+    "scenario": "Line items sum to 74,500 but the subtotal says 75,500 (+Rs 1,000). The stated total is within PO tolerance - only the arithmetic check catches it.",
+    "expected": "HOLD",
+    "codes": [
+      "ARITH_MISMATCH"
+    ]
+  }
+]
