@@ -1,18 +1,18 @@
-# Emerald Green palette: emerald #1F7A63 primary, navy #081C2D second, soft white #F5F7FA, cool gray #9AA3A8
+# The app's palette: violet #654CF4, ink #0E0A20, yellow #F4CB3D, mint #66C79E, in big rounded blocks
 [theme]
 base = "light"
-primaryColor = "#1F7A63"
-backgroundColor = "#FFFFFF"
-secondaryBackgroundColor = "#F5F7FA"
-textColor = "#081C2D"
+primaryColor = "#654CF4"
+backgroundColor = "#F3F3F7"
+secondaryBackgroundColor = "#FFFFFF"
+textColor = "#0E0A20"
 font = "sans serif"
 
-# the sidebar is emerald, as in the main app
+# the sidebar is an ink block; yellow marks what is selected in it
 [theme.sidebar]
-backgroundColor = "#1F7A63"
-secondaryBackgroundColor = "#17614F"
+backgroundColor = "#0E0A20"
+secondaryBackgroundColor = "#1C1736"
 textColor = "#FFFFFF"
-primaryColor = "#081C2D"
+primaryColor = "#F4CB3D"
 
 [server]
 maxUploadSize = 25

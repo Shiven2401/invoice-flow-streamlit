@@ -49,19 +49,29 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&display=swap');
 html, body, [class*="css"], .stMarkdown, .stButton button, input, textarea, select { font-family: "Public Sans", system-ui, sans-serif; }
-h1, h2, h3 { color: #1F7A63; font-weight: 800 !important; letter-spacing: -0.01em; }
-.badge { display:inline-block; padding:2px 10px; border-radius:999px; font-weight:700; font-size:.8rem; letter-spacing:.04em; border:1.5px solid; }
+h1, h2, h3 { color: #0E0A20; font-weight: 800 !important; letter-spacing: -0.01em; }
+[data-testid="stMetric"] { border-radius:22px; padding:16px 18px; background:#FFFFFF; position:relative; overflow:hidden; }
+[data-testid="stMetricValue"], [data-testid="stMetricValue"] * { font-size: clamp(1.35rem, 1.1rem + 1.1vw, 2.25rem) !important; white-space: normal !important; overflow: visible !important; text-overflow: clip !important; overflow-wrap: anywhere; }
+[data-testid="stColumn"]:nth-child(4n+1) [data-testid="stMetric"] { background:#0E0A20; }
+[data-testid="stColumn"]:nth-child(4n+2) [data-testid="stMetric"] { background:#66C79E; }
+[data-testid="stColumn"]:nth-child(4n+3) [data-testid="stMetric"] { background:#F4CB3D; }
+[data-testid="stColumn"]:nth-child(4n+4) [data-testid="stMetric"] { background:#654CF4; }
+[data-testid="stColumn"]:nth-child(4n+1) [data-testid="stMetric"] *, [data-testid="stColumn"]:nth-child(4n+4) [data-testid="stMetric"] * { color:#FFFFFF !important; }
+[data-testid="stColumn"]:nth-child(4n+2) [data-testid="stMetric"] *, [data-testid="stColumn"]:nth-child(4n+3) [data-testid="stMetric"] * { color:#0E0A20 !important; }
+[data-testid="stExpander"] details, [data-testid="stVerticalBlockBorderWrapper"] { border-radius:22px !important; }
+.stButton button[kind="primary"], .stDownloadButton button[kind="primary"], .stFormSubmitButton button[kind="primary"] { background:#0E0A20; border-color:#0E0A20; color:#FFFFFF; border-radius:999px; }
+.stButton button[kind="primary"]:hover, .stDownloadButton button[kind="primary"]:hover, .stFormSubmitButton button[kind="primary"]:hover { background:#654CF4; border-color:#654CF4; }.badge { display:inline-block; padding:2px 10px; border-radius:999px; font-weight:700; font-size:.8rem; letter-spacing:.04em; border:1.5px solid; }
 .b-APPROVE { color:#1E7A4C; border-color:#1E7A4C; background:#E3F4EA; }
 .b-HOLD { color:#9A5B08; border-color:#9A5B08; background:#FCF0DC; }
 .b-REJECT { color:#B3261E; border-color:#B3261E; background:#FBE5E2; }
-.b-WAIT { color:#4B5B68; border-color:#9AA3A8; background:#F5F7FA; }
-.stage { padding:6px 0; border-bottom:1px solid #ECF0F3; }
-.stage small { color:#4B5B68; }
-.muted { color:#4B5B68; }
-.brand { font-size:1.35rem; font-weight:800; color:#081C2D; display:flex; align-items:center; gap:.5rem; }
+.b-WAIT { color:#5D5A6E; border-color:#9C99AB; background:#F7F6FB; }
+.stage { padding:6px 0; border-bottom:1px solid #EFEEF5; }
+.stage small { color:#5D5A6E; }
+.muted { color:#5D5A6E; }
+.brand { font-size:1.35rem; font-weight:800; color:#0E0A20; display:flex; align-items:center; gap:.5rem; }
 section[data-testid="stSidebar"] .brand { color:#FFFFFF; }
-section[data-testid="stSidebar"] .brand span.logo { background:#081C2D; }
-.brand span.logo { background:linear-gradient(135deg,#24896F,#145443); color:white; border-radius:10px; width:34px; height:34px;
+section[data-testid="stSidebar"] .brand span.logo { background:#F4CB3D; }
+.brand span.logo { background:#F4CB3D; color:#0E0A20 !important; color:white; border-radius:10px; width:34px; height:34px;
   display:inline-flex; align-items:center; justify-content:center; font-size:1.1rem; }
 </style>
 """, unsafe_allow_html=True)
@@ -631,7 +641,7 @@ def dashboard_page():
         m1, m2, m3, m4 = st.columns(4)
         m1.metric("Invoices processed", stats["total"], help=f"{stats['avg_seconds']}s average per invoice")
         m2.metric("Approved with no human touch", f"{stats['straight_through']}%", help=f"{stats['counts']['APPROVE']} approved in total")
-        m3.metric("Approved for payment", money(stats["approved_value"]), help="gross, including GST")
+        m3.metric("Approved for payment", money(stats["approved_value"]).rsplit(".", 1)[0], help="gross, including GST")  # whole rupees, as in the main app
         m4.metric("Waiting for a person", stats["counts"]["HOLD"], help=f"{money(stats['pending_value'])} on hold")
         c1, c2 = st.columns(2)
         with c1:
