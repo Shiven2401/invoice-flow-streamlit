@@ -1,10 +1,18 @@
+# Emerald Green palette: emerald #1F7A63 primary, navy #081C2D second, soft white #F5F7FA, cool gray #9AA3A8
 [theme]
 base = "light"
-primaryColor = "#8B2BD9"
+primaryColor = "#1F7A63"
 backgroundColor = "#FFFFFF"
-secondaryBackgroundColor = "#F8F5FE"
-textColor = "#1C1530"
+secondaryBackgroundColor = "#F5F7FA"
+textColor = "#081C2D"
 font = "sans serif"
+
+# the sidebar is emerald, as in the main app
+[theme.sidebar]
+backgroundColor = "#1F7A63"
+secondaryBackgroundColor = "#17614F"
+textColor = "#FFFFFF"
+primaryColor = "#081C2D"
 
 [server]
 maxUploadSize = 25
